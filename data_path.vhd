@@ -15,17 +15,17 @@ entity data_path is
          b_condition_sel_i:        in std_logic;-- '0'="=", '1'="!="
          ri_sel_i:                 in std_logic;-- '0'=r-type, '1'=i-type
          rf_rw_control_i:          in std_logic;-- '0'=rf读, '1'=rf写
-         memory_rw_control_i:      in std_logic;-- '1'=memory读， '1'=memory写
+         memory_rw_control_i:      in std_logic;-- '0'=memory读， '1'=memory写
          memory_enable_i:          in std_logic;
          output_sel_i:             in std_logic;-- '0'=从memory中输出, '1'=输出exe的结果
-         instruction_mem_state:    out std_logic;-- '0'=空闲, '1'=占用
-         rf_state:                 out std_logic;
-         alu_state:                out std_logic;
-         mult_state:               out std_logic;
-         div_state:                out std_logic;
-         data_mem_state:           out std_logic;
-         opcode:                   out std_logic_vector(dp_opcode_width-1 downto 0);
-         processor_ouput:          out std_logic_vector(dp_opcode_width-1 downto 0));
+         instruction_mem_state_o:  out std_logic;-- '0'=空闲, '1'=占用
+         rf_state_o:               out std_logic;
+         alu_state_o:              out std_logic;
+         mult_state_o:             out std_logic;
+         div_state_o:              out std_logic;
+         data_mem_state_o:         out std_logic;
+         opcode_o:                 out std_logic_vector(dp_opcode_width-1 downto 0);
+         processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0));
 end entity;
 
 architecture str of data_path is
@@ -94,6 +94,7 @@ component data_memory is
          mem_rw_sel_i:         in std_logic;
          mem_en_i:             in std_logic;
          mem_out_sel_i:        in std_logic;
+         mem_clk_i:            in std_logic;
          mem_output_o:         out std_logic_vector(data_width-1 downto 0);
          mem_data_mem_state_o: out std_logic);
 end component;
@@ -140,7 +141,7 @@ begin
                       port map(if_curr_addr_i=>curr_instruction_addr,
                                if_clk_i=>main_clk_i,
                                if_instruction_o=>curr_instruction,
-                               if_ins_mem_state=>instruction_mem_state);
+                               if_ins_mem_state=>instruction_mem_state_o);
                                 
     if_id_reg1: n_bit_reg generic map(data_width=>dp_data_width)
                           port map(data_i=>curr_instruction,
@@ -160,13 +161,13 @@ begin
                                id_write_back_data_i=>data_write_back,
                                id_write_back_addr_i=>rd_mem,
                                id_rf_rw_control_i=>rf_rw_control_i,
-                               id_opcode_o=>opcode,
+                               id_opcode_o=>opcode_o,
                                id_func_code_o=>func_code,
                                id_operand_a_reg_o=>operand_a_reg,
                                id_operand_a_o=>operand_a,
                                id_operand_b_o=>operand_b,
                                id_wb_addr_rd_o=>rd,
-                               id_rf_state_o=>rf_state);
+                               id_rf_state_o=>rf_state_o);
                                
     id_exe_reg1: n_bit_reg generic map(data_width=>dp_data_width)
                           port map(data_i=>operand_a,
@@ -199,9 +200,9 @@ begin
                                  exe_operand_b_i=>operand_b_exe,
                                  exe_func_code_i=>func_code_exe,
                                  exe_result_o=>exe_result,
-                                 exe_alu_state_o=>alu_state,
-                                 exe_mult_state_o=>mult_state,
-                                 exe_div_state_o=>div_state);
+                                 exe_alu_state_o=>alu_state_o,
+                                 exe_mult_state_o=>mult_state_o,
+                                 exe_div_state_o=>div_state_o);
     jump_next_instruction_addr<=exe_result;
     
     exe_mem_reg1: n_bit_reg generic map(data_width=>dp_data_width)
@@ -230,14 +231,15 @@ begin
                                      mem_rw_sel_i=>memory_rw_control_i,
                                      mem_en_i=>memory_enable_i,
                                      mem_out_sel_i=>output_sel_i,
+                                     mem_clk_i=>main_clk_i,
                                      mem_output_o=>data_write_back,
-                                     mem_data_mem_state_o=>data_mem_state);
+                                     mem_data_mem_state_o=>data_mem_state_o);
     
     mem_out_reg3: n_bit_reg generic map(data_width=>dp_rf_reg_addr_width)
                             port map(data_i=>data_write_back,
                                      clk=>main_clk_i,
                                      en=>'1',
-                                     data_o=>processor_ouput);
+                                     data_o=>processor_ouput_o);
 -------------------
 --  branch path  --
 -------------------
