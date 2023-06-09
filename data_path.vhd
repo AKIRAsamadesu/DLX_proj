@@ -9,16 +9,17 @@ entity data_path is
             dp_rf_reg_addr_width:  integer := 5;
             dp_func_code_width:    integer := 6 );
     port(main_clk_i:               in std_logic;
-         rf_enable_i:              in std_logic;-- '0'=Ê§ÄÜ£¬'1'=Ê¹ÄÜ
-         jn_sel_i:                 in std_logic;-- '0'=Õý³£ÔËÐÐ£¬'1'=·ÖÖ§×ªÌøÖ¸Áî
+         rf_enable_i:              in std_logic;-- '0'=Ê§ï¿½Ü£ï¿½'1'=Ê¹ï¿½ï¿½
+         jn_sel_i:                 in std_logic;-- '0'=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½'1'=ï¿½ï¿½Ö§×ªï¿½ï¿½Ö¸ï¿½ï¿½
          jb_sel_i:                 in std_logic;-- '0'=jump, '1'=branch
          b_condition_sel_i:        in std_logic;-- '0'="=", '1'="!="
          ri_sel_i:                 in std_logic;-- '0'=r-type, '1'=i-type
-         rf_rw_control_i:          in std_logic;-- '0'=rf¶Á, '1'=rfÐ´
-         memory_rw_control_i:      in std_logic;-- '0'=memory¶Á£¬ '1'=memoryÐ´
+         rf_r_enable_i:            in std_logic;-- '0' = diable;'1' read data
+         rf_w_enable_i:            in std_logic;-- '0' = diable;'1' write data
+         memory_rw_control_i:      in std_logic;-- '0'=memoryï¿½ï¿½ï¿½ï¿½ '1'=memoryÐ´
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=´ÓmemoryÖÐÊä³ö, '1'=Êä³öexeµÄ½á¹û
-         instruction_mem_state_o:  out std_logic;-- '0'=¿ÕÏÐ, '1'=Õ¼ÓÃ
+         output_sel_i:             in std_logic;-- '0'=ï¿½ï¿½memoryï¿½ï¿½ï¿½ï¿½ï¿½, '1'=ï¿½ï¿½ï¿½exeï¿½Ä½ï¿½ï¿½
+         instruction_mem_state_o:  out std_logic;-- '0'=ï¿½ï¿½ï¿½ï¿½, '1'=Õ¼ï¿½ï¿½
          rf_state_o:               out std_logic;
          alu_state_o:              out std_logic;
          mult_state_o:             out std_logic;
@@ -26,8 +27,7 @@ entity data_path is
          data_mem_state_o:         out std_logic;
          opcode_o:                 out std_logic_vector(dp_opcode_width-1 downto 0);
          processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0));
-end entity;
-
+end entity
 architecture str of data_path is
 ----------------------
 --  component list  --
@@ -63,7 +63,8 @@ component id_stage is
          id_ri_sel_i:               in std_logic; -- r-type instruction and i-type instruction selection
          id_write_back_data_i:      in std_logic_vector(data_width-1 downto 0); -- data write back from memory
          id_write_back_addr_i:      in std_logic_vector(rf_reg_addr_width-1 downto 0);
-         id_rf_rw_control_i:        in std_logic; -- register file read/write
+         id_rf_r_enable_i:          in std_logic; -- register file read
+         id_rf_w_enable_i:          in std_logic; -- register file write
          id_opcode_o:               out std_logic_vector(opcode_width-1 downto 0);
          id_func_code_o:            out std_logic_vector(func_width-1 downto 0);
          id_operand_a_reg_o:        out std_logic_vector(data_width-1 downto 0);
@@ -149,7 +150,7 @@ begin
                                    en=>'1',
                                    data_o=>curr_instruction_id);
 -- id stage 
-    risc_id: id_stage generic map(opcode_width=>dp_opcode_width, --ÕâÀïÒª°üÀ¨ºóÃæµÄimmºÍrf_opbµÄÑ¡Ôñ
+    risc_id: id_stage generic map(opcode_width=>dp_opcode_width, --ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½immï¿½ï¿½rf_opbï¿½ï¿½Ñ¡ï¿½ï¿½
                                   rf_reg_addr_width=>dp_rf_reg_addr_width,
                                   func_width=>dp_func_code_width)
                       port map(id_instruction=>curr_instruction_id,
@@ -160,7 +161,8 @@ begin
                                id_ri_sel_i=>ri_sel_i,
                                id_write_back_data_i=>data_write_back,
                                id_write_back_addr_i=>rd_mem,
-                               id_rf_rw_control_i=>rf_rw_control_i,
+                               id_rf_r_enable_i=>rf_r_enable_i,
+                               id_rf_w_enable_i=>rf_w_enable_i,
                                id_opcode_o=>opcode_o,
                                id_func_code_o=>func_code,
                                id_operand_a_reg_o=>operand_a_reg,
@@ -254,9 +256,9 @@ begin
         if (jn_sel_i='0') then
             next_instruction_addr<=std_logic_vector(unsigned(curr_instruction_addr)+4);
         else
-            if (jb_sel_i='0') then -- Ñ¡ÖÐjump·½Ê½
-                next_instruction_addr<=jump_next_instruction_addr; -- ri_sel_iÐÅºÅ¿ÉÒÔÑ¡ÔñaddrµÄ¼ÆËã·½Ê½ÊÇÓÉimm¼ÆËã»¹ÊÇreg¼ÆËã
-            else -- Ñ¡ÖÐbranch£¬´ËÊ±ri_sel_iÐÅºÅÒ»¶¨Îª1
+            if (jb_sel_i='0') then -- Ñ¡ï¿½ï¿½jumpï¿½ï¿½Ê½
+                next_instruction_addr<=jump_next_instruction_addr; -- ri_sel_iï¿½ÅºÅ¿ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½addrï¿½Ä¼ï¿½ï¿½ã·½Ê½ï¿½ï¿½ï¿½ï¿½immï¿½ï¿½ï¿½ã»¹ï¿½ï¿½regï¿½ï¿½ï¿½ï¿½
+            else -- Ñ¡ï¿½ï¿½branchï¿½ï¿½ï¿½ï¿½Ê±ri_sel_iï¿½Åºï¿½Ò»ï¿½ï¿½Îª1
                 if (b_condition_sel_i='1') then -- equal to 0 
                     if (unsigned(operand_a_reg)=0) then
                         next_instruction_addr<=jump_next_instruction_addr; 
