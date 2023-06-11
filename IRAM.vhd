@@ -11,11 +11,12 @@ use ieee.std_logic_textio.all;
 entity IRAM is
   generic (
     RAM_DEPTH : integer := 48; -- the number of instructurns
-    I_SIZE : integer := 32);
+    I_SIZE : integer := 32;
+    ADDR_SIZE : integer := 6);
   port (
     Clk  : in std_logic;
     Rst  : in  std_logic;
-    Addr : in  std_logic_vector(I_SIZE - 1 downto 0);
+    Addr : in  std_logic_vector(ADDR_SIZE - 1 downto 0);
     Dout : out std_logic_vector(I_SIZE - 1 downto 0)
     );
 
@@ -23,19 +24,19 @@ end IRAM;
 
 architecture IRam_Bhe of IRAM is
 
-  type RAMtype is array (integer range 0 to RAM_DEPTH - 1) of std_logic_vector(I_SIZE - 1 downto 0);;-- std_logic_vector(I_SIZE - 1 downto 0);
+  type RAMtype is array ( 0 to RAM_DEPTH - 1) of integer; --std_logic_vector(I_SIZE - 1 downto 0);-- std_logic_vector(I_SIZE - 1 downto 0);
 
   signal IRAM_mem : RAMtype;
 
 begin  -- IRam_Bhe
-  Output_data : process (clk, Rst, Addr)
+  Output_data : process (Clk, Rst)
   begin
     if Rst = '0' then
-      if Clk='1' and clk'event then
+      if Clk='1' and Clk'event then
         Dout <= conv_std_logic_vector(IRAM_mem(conv_integer(unsigned(Addr))),I_SIZE);
       end if;
     end if;
-  end process;
+  end process Output_data;
 
   -- purpose: This process is in charge of filling the Instruction RAM with the firmware
   -- type   : combinational

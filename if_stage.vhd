@@ -12,7 +12,7 @@ generic (
 
 	);
 port(
-	    --if_clk_i           : in  std_logic;  -- Clock
+	    if_clk_i           : in  std_logic;  -- Clock
     	if_rst_i           : in  std_logic;  -- Reset:Active-Low
     	if_curr_addr_i     : in  std_logic_vector(addr_width-1 downto 0); -- the port used to receive the addr from decode stage mu
     	if_instruction_o   : out std_logic_vector(data_width-1 downto 0);
