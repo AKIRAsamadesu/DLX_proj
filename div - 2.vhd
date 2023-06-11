@@ -52,32 +52,35 @@ begin
                 divisor_reg (DATA_WIDTH - 1):= divisor_reg(DATA_WIDTH - 1);
                 --divisor_reg(DATA_WIDTH - 2 downto DATA_WIDTH/2+1) := divisor_reg(DATA_WIDTH/2-2  downto 0); ???
                 divisor_reg(30 downto 16) := divisor_reg(14  downto 0);
-                divisor_reg(DATA_WIDTH/2 downto 0) := (others => '0');
+                divisor_reg(DATA_WIDTH/2-1 downto 0) := (others => '0');
 
-                for i in  DATA_WIDTH - 1 downto 0 loop
+                for i in  DATA_WIDTH/2  downto 0 loop
                     if remainder_reg(DATA_WIDTH - 1) = '0' then
                         remainder_reg (DATA_WIDTH - 1):= remainder_reg(DATA_WIDTH - 1);
                         remainder_reg (DATA_WIDTH - 2 downto 1):= remainder_reg(DATA_WIDTH - 3 downto 0);
                         remainder_reg (0):= '0';
-                        restore_reg(DATA_WIDTH - 1) := remainder_reg(DATA_WIDTH - 1);
+                        restore_reg(DATA_WIDTH - 1 downto 0) := remainder_reg(DATA_WIDTH - 1 downto 0);
                         remainder_reg := std_logic_vector(signed(remainder_reg) - signed(divisor_reg));
                         quotient_reg(i) := '1';
                     else
-                        remainder_reg(DATA_WIDTH - 1):= restore_reg(DATA_WIDTH - 1);
+                        remainder_reg(DATA_WIDTH - 1 downto 0):= restore_reg(DATA_WIDTH - 1 downto 0);
                         remainder_reg (DATA_WIDTH - 1):= remainder_reg(DATA_WIDTH - 1);
                         remainder_reg (DATA_WIDTH - 2 downto 1):= remainder_reg(DATA_WIDTH - 3 downto 0);
                         remainder_reg (0):= '0';
+                        restore_reg(DATA_WIDTH - 1 downto 0) := remainder_reg(DATA_WIDTH - 1 downto 0);
+                        remainder_reg := std_logic_vector(signed(remainder_reg) - signed(divisor_reg));
                         quotient_reg(i) := '0';
                     end if;
                 end loop;
                 
+                quotient_reg(DATA_WIDTH/2) := '0';
                 shift_count := shift_count - 1;
                 done_flag := '0';
             end if;
         end if;
 
         quotient <= quotient_reg;
-        remainder <= remainder_reg;
+        remainder(DATA_WIDTH/2 - 2 downto 0) <= restore_reg(DATA_WIDTH - 1 downto DATA_WIDTH/2 + 1);
         done <= done_flag;
     end process;
 end architecture Behavioral;
