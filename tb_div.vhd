@@ -46,8 +46,8 @@ begin
     stimulus_process: process
     begin
         -- Set test inputs
-        dividend <= std_logic_vector(to_signed(117, DATA_WIDTH));
-        divisor <= std_logic_vector(to_signed(10, DATA_WIDTH));
+        dividend <= std_logic_vector(to_signed(43214, DATA_WIDTH));
+        divisor <= std_logic_vector(to_signed(32, DATA_WIDTH));
 
         -- Reset
         rst <= '1';
