@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_arith;
 
-entity Restoring_Division is
+entity restoring_division is
     generic (
         DATA_WIDTH: positive := 32
     );
@@ -16,9 +16,9 @@ entity Restoring_Division is
         remainder: out std_logic_vector(DATA_WIDTH - 1 downto 0);
         done: out std_logic
     );
-end entity Restoring_Division;
+end entity restoring_division;
 
-architecture Behavioral of Restoring_Division is
+architecture Behavioral of restoring_division is
 begin
     process (clk)
         variable dividend_reg: std_logic_vector(DATA_WIDTH - 1 downto 0);

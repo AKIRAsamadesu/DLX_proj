@@ -18,7 +18,7 @@ entity data_path is
          rf_w_enable_i:            in std_logic;-- '0' = diable;'1' write data
          memory_rw_control_i:      in std_logic;-- '0'=memory���� '1'=memoryд
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=��memory�����, '1'=���exe�Ľ��
+         output_sel_i:             in std_logic;-- '0'=��memory�����?, '1'=���exe�Ľ��?
          instruction_mem_state_o:  out std_logic;-- '0'=����, '1'=ռ��
          rf_state_o:               out std_logic;
          alu_state_o:              out std_logic;
@@ -27,7 +27,7 @@ entity data_path is
          data_mem_state_o:         out std_logic;
          opcode_o:                 out std_logic_vector(dp_opcode_width-1 downto 0);
          processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0));
-end entity
+end entity;
 architecture str of data_path is
 ----------------------
 --  component list  --
@@ -37,7 +37,7 @@ component n_bit_reg is
     port(data_i: in     std_logic_vector(data_width-1 downto 0);
          clk:    in     std_logic;
          en:     in     std_logic;
-         data_o: out    std_logic_vector(data_width-1 downto 0))
+         data_o: out    std_logic_vector(data_width-1 downto 0));
 end component;
 
 component if_stage is
@@ -46,7 +46,7 @@ component if_stage is
     port(if_curr_addr_i:        in std_logic_vector(addr_width-1 downto 0);
          if_clk_i:              in std_logic;
          if_instruction_o:      out std_logic_vector(data_width-1 downto 0);
-         if_ins_mem_state:      out std_logic)
+         if_ins_mem_state:      out std_logic);
 end component;
 
 component id_stage is

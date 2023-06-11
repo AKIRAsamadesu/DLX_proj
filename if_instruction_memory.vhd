@@ -8,7 +8,7 @@ use ieee.std_logic_textio.all;
 -- Instruction memory for DLX
 -- Memory filled by a process which reads from a file
 -- file name is "test.asm.mem"
-entity IRAM is
+entity iram is
   generic (
     RAM_DEPTH : integer := 48; -- the number of instructurns
     I_SIZE : integer := 32;
@@ -20,9 +20,9 @@ entity IRAM is
     Dout : out std_logic_vector(I_SIZE - 1 downto 0)
     );
 
-end IRAM;
+end iram;
 
-architecture IRam_Bhe of IRAM is
+architecture IRam_Bhe of iram is
 
   type RAMtype is array ( 0 to RAM_DEPTH - 1) of integer; --std_logic_vector(I_SIZE - 1 downto 0);-- std_logic_vector(I_SIZE - 1 downto 0);
 

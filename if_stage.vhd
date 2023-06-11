@@ -23,7 +23,7 @@ end if_stage;
 
 architecture str of if_stage is
 
-	component IRAM is
+	component iram is
 		  generic (
 				    RAM_DEPTH : integer := 48; -- the number of instructurns
 				    I_SIZE : integer := 32);
