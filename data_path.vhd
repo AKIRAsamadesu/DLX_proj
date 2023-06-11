@@ -37,7 +37,7 @@ component n_bit_reg is
     port(data_i: in     std_logic_vector(data_width-1 downto 0);
          clk:    in     std_logic;
          en:     in     std_logic;
-         data_o: out    std_logic_vector(data_width-1 downto 0));
+         data_o: out    std_logic_vector(data_width-1 downto 0))
 end component;
 
 component if_stage is
@@ -46,7 +46,7 @@ component if_stage is
     port(if_curr_addr_i:        in std_logic_vector(addr_width-1 downto 0);
          if_clk_i:              in std_logic;
          if_instruction_o:      out std_logic_vector(data_width-1 downto 0);
-         if_ins_mem_state:      out std_logic);
+         if_ins_mem_state:      out std_logic)
 end component;
 
 component id_stage is

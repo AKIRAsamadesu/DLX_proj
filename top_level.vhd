@@ -20,16 +20,17 @@ component data_path is
             dp_rf_reg_addr_width:  integer := 5;
             dp_func_code_width:    integer := 6 );
     port(main_clk_i:               in std_logic;
-         rf_enable_i:              in std_logic;-- '0'=Ê§ÄÜ£¬'1'=Ê¹ÄÜ
-         jn_sel_i:                 in std_logic;-- '0'=Õý³£ÔËÐÐ£¬'1'=·ÖÖ§×ªÌøÖ¸Áî
+         rf_enable_i:              in std_logic;-- '0'=Ê§ï¿½Ü£ï¿½'1'=Ê¹ï¿½ï¿½
+         jn_sel_i:                 in std_logic;-- '0'=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½'1'=ï¿½ï¿½Ö§×ªï¿½ï¿½Ö¸ï¿½ï¿½
          jb_sel_i:                 in std_logic;-- '0'=jump, '1'=branch
          b_condition_sel_i:        in std_logic;-- '0'="=", '1'="!="
          ri_sel_i:                 in std_logic;-- '0'=r-type, '1'=i-type
-         rf_rw_control_i:          in std_logic;-- '0'=rf¶Á, '1'=rfÐ´
-         memory_rw_control_i:      in std_logic;-- '1'=memory¶Á£¬ '1'=memoryÐ´
+         rf_r_enable_i:            in std_logic;-- '0' = diable;'1' read data
+         rf_w_enable_i:            in std_logic;-- '0' = diable;'1' write data
+         memory_rw_control_i:      in std_logic;-- '1'=memoryï¿½ï¿½ï¿½ï¿½ '1'=memoryÐ´
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=´ÓmemoryÖÐÊä³ö, '1'=Êä³öexeµÄ½á¹û
-         instruction_mem_state:    out std_logic;-- '0'=¿ÕÏÐ, '1'=Õ¼ÓÃ
+         output_sel_i:             in std_logic;-- '0'=ï¿½ï¿½memoryï¿½ï¿½ï¿½ï¿½ï¿½, '1'=ï¿½ï¿½ï¿½exeï¿½Ä½ï¿½ï¿½
+         instruction_mem_state:    out std_logic;-- '0'=ï¿½ï¿½ï¿½ï¿½, '1'=Õ¼ï¿½ï¿½
          rf_state:                 out std_logic;
          alu_state:                out std_logic;
          mult_state:               out std_logic;
