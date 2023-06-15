@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 use WORK.all;
 
-entity WINDOWED_REGISTER_FILE is
+entity windowed_register_file is
     generic (
         F : integer := 8; --number of windows
         N : integer := 8; --number of registers in each IN,OUT,LOCAL (fixed) window
@@ -34,9 +34,9 @@ entity WINDOWED_REGISTER_FILE is
         FILL    : out std_logic; --for filling, MMU to register
         D_BUS   : inout  std_logic_vector(NBIT_DATA-1 downto 0) --bidirectional bus for data transfer
     );
-end WINDOWED_REGISTER_FILE;
+end windowed_register_file;
 
-architecture A of WINDOWED_REGISTER_FILE is
+architecture A of windowed_register_file is
 
     subtype REG_ADDR is natural range 0 to F*2*N + M - 1; -- two blocks(in/out, and local) of N registers allocation for each window + a block of M registers for global registers
     type REG_ARRAY is array (REG_ADDR) of std_logic_vector(NBIT_DATA-1 downto 0);

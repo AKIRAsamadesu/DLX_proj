@@ -7,9 +7,10 @@ entity data_path is
             dp_addr_width:         integer := 32;
             dp_opcode_width:       integer := 6;
             dp_rf_reg_addr_width:  integer := 5;
-            dp_func_code_width:    integer := 6 );
+            dp_func_code_width:    integer := 11 );
     port(main_clk_i:               in std_logic;
          main_rst_i:               in std_logic;
+         alu_func_sel_i:           in std_logic_vector(dp_func_code_width-1 downto 0);
          rf_enable_i:              in std_logic;-- '0'=register file enable '1'=register file disable
          jn_sel_i:                 in std_logic;-- '0'=j-type instruction '1'=r-type/i-type instruction
          jb_sel_i:                 in std_logic;-- '0'=jump, '1'=branch
@@ -20,15 +21,18 @@ entity data_path is
          su_sel_i:                 in std_logic;
          memory_rw_control_i:      in std_logic;-- '0'=memory read '1'=memory write
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=memory , '1'=ï¿½ï¿½ï¿½exeï¿½Ä½ï¿½ï¿?
+         output_sel_i:             in std_logic;-- '0'=memory , '1'=write back
          instruction_mem_state_o:  out std_logic;-- '0'=idle, '1'=occupied
          rf_state_o:               out std_logic;
          alu_state_o:              out std_logic;
          mult_state_o:             out std_logic;
          div_state_o:              out std_logic;
+         res_state_o:              out std_logic;
          data_mem_state_o:         out std_logic;
+         func_code_o:              out std_logic_vector(dp_func_code_width-1 downto 0);
          opcode_o:                 out std_logic_vector(dp_opcode_width-1 downto 0);
-         processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0));
+         processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0)
+         );
 end entity;
 architecture str of data_path is
 ----------------------
@@ -88,7 +92,8 @@ component exe_stage is
          exe_result_o:          out std_logic_vector(data_width-1 downto 0);
          exe_alu_state_o:       out std_logic;
          exe_mult_state_o:      out std_logic;
-         exe_div_state_o:       out std_logic);
+         exe_div_state_o:       out std_logic;
+         exe_overflow_o:        out std_logic);
 end component;
 
 component data_memory is
@@ -115,12 +120,10 @@ signal normal_next_instruction_addr:        std_logic_vector(dp_addr_width-1 dow
 signal curr_instruction:                    std_logic_vector(dp_data_width-1 downto 0);
 signal curr_instruction_id:                 std_logic_vector(dp_data_width-1 downto 0);
 -- if to id 
-signal func_code:                           std_logic_vector(dp_func_code_width-1 downto 0);
 signal operand_a_reg:                       std_logic_vector(dp_func_code_width-1 downto 0);
 signal operand_a:                           std_logic_vector(dp_data_width-1 downto 0);
 signal operand_b:                           std_logic_vector(dp_data_width-1 downto 0);
 signal rd:                                  std_logic_vector(dp_rf_reg_addr_width-1 downto 0);
-signal func_code_exe:                       std_logic_vector(dp_func_code_width-1 downto 0);
 signal operand_a_reg_exe:                   std_logic_vector(dp_func_code_width-1 downto 0);
 signal operand_a_exe:                       std_logic_vector(dp_data_width-1 downto 0);
 signal operand_b_exe:                       std_logic_vector(dp_data_width-1 downto 0);
@@ -170,7 +173,7 @@ begin
                                id_rf_r_enable_i=>rf_r_enable_i,
                                id_rf_w_enable_i=>rf_w_enable_i,
                                id_opcode_o=>opcode_o,
-                               id_func_code_o=>func_code,
+                               id_func_code_o=>func_code_o,
                                id_operand_a_reg_o=>operand_a_reg,
                                id_operand_a_o=>operand_a,
                                id_operand_b_o=>operand_b,
@@ -188,12 +191,6 @@ begin
                                     clk=>main_clk_i,
                                     en=>'1',
                                     data_o=>operand_b_exe);
-                                    
-    id_exe_reg3: n_bit_reg generic map(data_width=>dp_func_code_width)
-                           port map(data_i=>func_code,
-                                    clk=>main_clk_i,
-                                    en=>'1',
-                                    data_o=>func_code_exe);
     
     id_exe_reg4: n_bit_reg generic map(data_width=>dp_rf_reg_addr_width)
                            port map(data_i=>rd,
@@ -206,11 +203,12 @@ begin
                                      func_code_width=>dp_func_code_width)
                         port map(exe_operand_a_i=>operand_a_exe,
                                  exe_operand_b_i=>operand_b_exe,
-                                 exe_func_code_i=>func_code_exe,
+                                 exe_func_code_i=>alu_func_sel_i,
                                  exe_result_o=>exe_result,
                                  exe_alu_state_o=>alu_state_o,
                                  exe_mult_state_o=>mult_state_o,
-                                 exe_div_state_o=>div_state_o);
+                                 exe_div_state_o=>div_state_o,
+                                 exe_overflow_o=>res_state_o);
     jump_next_instruction_addr<=exe_result;
     
     exe_mem_reg1: n_bit_reg generic map(data_width=>dp_data_width)

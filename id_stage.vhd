@@ -29,7 +29,7 @@ end entity;
 
 architecture str of id_stage is
 
-component windowed_register_file is
+component comb is
     generic (
         F : integer := 8; --number of windows
         N : integer := 8; --number of registers in each IN,OUT,LOCAL (fixed) window
@@ -55,10 +55,7 @@ component windowed_register_file is
 
         --additional signals for windowing
         CALL    : in  std_logic; --for subroutine call
-        SPILL   : out std_logic; --for spilling, window to MMU
-        RTRN    : in  std_logic; --for subroutine return
-        FILL    : out std_logic; --for filling, MMU to register
-        D_BUS   : inout  std_logic_vector(NBIT_DATA-1 downto 0) --bidirectional bus for data transfer
+        RTRN    : in  std_logic --for subroutine return
     );
 end component;
 
@@ -99,25 +96,21 @@ begin
         end if;
     end process;      
     
-    rf: windowed_register_file port map(CLK=>id_clk_i,     
-                                        RESET=>id_rst_i,  
-                                        ENABLE=>id_rf_enable_i,   
-                                        RD1=>'1',       
-                                        RD2=>'1',       
-                                        WR=>id_rf_rw_control_i,        
-                                        ADD_WR=>id_write_back_addr_i,    
-                                        ADD_RD1=>rs1,   
-                                        ADD_RD2=>rs2,   
-                                        DATAIN=>id_write_back_data_i,    
-                                        OUT1=>op_a,      
-                                        OUT2=>op_b,
-                                        
-                                        CALL=>,    -- in  std_logic; --for subroutine call
-                                        SPILL=>,   -- out std_logic; --for spilling, window to MMU
-                                        RTRN=>,    -- in  std_logic; --for subroutine return
-                                        FILL=>,    -- out std_logic; --for filling, MMU to register
-                                        D_BUS=>,   -- inout  std_logic_vector(NBIT_DATA-1 downto 0) --bidirectional bus for data transfer
-                                        );
+    rf: comb port map(CLK=>id_clk_i,     
+                    RESET=>id_rst_i,  
+                    ENABLE=>id_rf_enable_i,   
+                    RD1=>'1',       
+                    RD2=>'1',       
+                    WR=>id_rf_rw_control_i,        
+                    ADD_WR=>id_write_back_addr_i,    
+                    ADD_RD1=>rs1,   
+                    ADD_RD2=>rs2,   
+                    DATAIN=>id_write_back_data_i,    
+                    OUT1=>op_a,      
+                    OUT2=>op_b,                
+                    CALL=>'0',    -- in  std_logic; --for subroutine call --TODO: call and return operations need PC stack and pop
+                    RTRN=>'0'    -- in  std_logic; --for subroutine return
+                    );
     id_operand_a_reg_o<=op_a;
     id_operand_a_o<=op_a when id_jn_sel_i='0' else
                     id_currinstruction_addr;
