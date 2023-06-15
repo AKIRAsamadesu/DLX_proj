@@ -9,17 +9,19 @@ entity data_path is
             dp_rf_reg_addr_width:  integer := 5;
             dp_func_code_width:    integer := 6 );
     port(main_clk_i:               in std_logic;
-         rf_enable_i:              in std_logic;-- '0'=ʧ�ܣ�'1'=ʹ��
-         jn_sel_i:                 in std_logic;-- '0'=�������У�'1'=��֧ת��ָ��
+         main_rst_i:               in std_logic;
+         rf_enable_i:              in std_logic;-- '0'=register file enable '1'=register file disable
+         jn_sel_i:                 in std_logic;-- '0'=j-type instruction '1'=r-type/i-type instruction
          jb_sel_i:                 in std_logic;-- '0'=jump, '1'=branch
          b_condition_sel_i:        in std_logic;-- '0'="=", '1'="!="
          ri_sel_i:                 in std_logic;-- '0'=r-type, '1'=i-type
          rf_r_enable_i:            in std_logic;-- '0' = diable;'1' read data
          rf_w_enable_i:            in std_logic;-- '0' = diable;'1' write data
-         memory_rw_control_i:      in std_logic;-- '0'=memory���� '1'=memoryд
+         su_sel_i:                 in std_logic;
+         memory_rw_control_i:      in std_logic;-- '0'=memory read '1'=memory write
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=��memory�����?, '1'=���exe�Ľ��?
-         instruction_mem_state_o:  out std_logic;-- '0'=����, '1'=ռ��
+         output_sel_i:             in std_logic;-- '0'=memory , '1'=���exe�Ľ��?
+         instruction_mem_state_o:  out std_logic;-- '0'=idle, '1'=occupied
          rf_state_o:               out std_logic;
          alu_state_o:              out std_logic;
          mult_state_o:             out std_logic;
@@ -58,9 +60,11 @@ component id_stage is
     port(id_instruction:            in std_logic_vector(data_width-1 downto 0);
          id_currinstruction_addr:   in std_logic_vector(addr_width-1 downto 0);
          id_clk_i:                  in std_logic;
+         id_rst_i:                  in std_logic;
          id_rf_enable_i:            in std_logic;
          id_jn_sel_i:               in std_logic; -- j-type and normal instruction selection
          id_ri_sel_i:               in std_logic; -- r-type instruction and i-type instruction selection
+         id_su_sel_i:               in std_logic;
          id_write_back_data_i:      in std_logic_vector(data_width-1 downto 0); -- data write back from memory
          id_write_back_addr_i:      in std_logic_vector(rf_reg_addr_width-1 downto 0);
          id_rf_r_enable_i:          in std_logic; -- register file read
@@ -120,7 +124,7 @@ signal func_code_exe:                       std_logic_vector(dp_func_code_width-
 signal operand_a_reg_exe:                   std_logic_vector(dp_func_code_width-1 downto 0);
 signal operand_a_exe:                       std_logic_vector(dp_data_width-1 downto 0);
 signal operand_b_exe:                       std_logic_vector(dp_data_width-1 downto 0);
-signal rd_exe:                                  std_logic_vector(dp_rf_reg_addr_width-1 downto 0);
+signal rd_exe:                              std_logic_vector(dp_rf_reg_addr_width-1 downto 0);
 -- id to exe
 signal exe_result:                          std_logic_vector(dp_data_width-1 downto 0);
 signal load_data_mem:                       std_logic_vector(dp_data_width-1 downto 0);
@@ -156,9 +160,11 @@ begin
                       port map(id_instruction=>curr_instruction_id,
                                id_currinstruction_addr=>curr_instruction_addr,
                                id_clk_i=>main_clk_i,
+                               id_rst_i=>main_rst_i,
                                id_rf_enable_i=>rf_enable_i,
                                id_jn_sel_i=>jn_sel_i,
                                id_ri_sel_i=>ri_sel_i,
+                               id_su_sel_i=>su_sel_i,
                                id_write_back_data_i=>data_write_back,
                                id_write_back_addr_i=>rd_mem,
                                id_rf_r_enable_i=>rf_r_enable_i,
@@ -256,9 +262,9 @@ begin
         if (jn_sel_i='0') then
             next_instruction_addr<=std_logic_vector(unsigned(curr_instruction_addr)+4);
         else
-            if (jb_sel_i='0') then -- ѡ��jump��ʽ
-                next_instruction_addr<=jump_next_instruction_addr; -- ri_sel_i�źſ���ѡ��addr�ļ��㷽ʽ����imm���㻹��reg����
-            else -- ѡ��branch����ʱri_sel_i�ź�һ��Ϊ1
+            if (jb_sel_i='0') then -- "0"=normal running
+                next_instruction_addr<=jump_next_instruction_addr; -- ri_sel_i select from r_type to i_type, this sel also has impact on j_type
+            else -- "1"=jump or branch running
                 if (b_condition_sel_i='1') then -- equal to 0 
                     if (unsigned(operand_a_reg)=0) then
                         next_instruction_addr<=jump_next_instruction_addr; 

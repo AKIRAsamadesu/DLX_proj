@@ -20,6 +20,7 @@ component data_path is
             dp_rf_reg_addr_width:  integer := 5;
             dp_func_code_width:    integer := 6 );
     port(main_clk_i:               in std_logic;
+         main_rst_i:               in std_logic;
          rf_enable_i:              in std_logic;-- '0'=ʧ�ܣ�'1'=ʹ��
          jn_sel_i:                 in std_logic;-- '0'=�������У�'1'=��֧ת��ָ��
          jb_sel_i:                 in std_logic;-- '0'=jump, '1'=branch
@@ -27,9 +28,10 @@ component data_path is
          ri_sel_i:                 in std_logic;-- '0'=r-type, '1'=i-type
          rf_r_enable_i:            in std_logic;-- '0' = diable;'1' read data
          rf_w_enable_i:            in std_logic;-- '0' = diable;'1' write data
+         su_sel_i:                 in std_logic;
          memory_rw_control_i:      in std_logic;-- '1'=memory���� '1'=memoryд
          memory_enable_i:          in std_logic;
-         output_sel_i:             in std_logic;-- '0'=��memory�����, '1'=���exe�Ľ��
+         output_sel_i:             in std_logic;-- '0'=��memory�����?, '1'=���exe�Ľ��?
          instruction_mem_state:    out std_logic;-- '0'=����, '1'=ռ��
          rf_state:                 out std_logic;
          alu_state:                out std_logic;
@@ -47,6 +49,7 @@ end component;
 --  signal list  --
 -------------------
 risc_data_path: data_path port map(main_clk_i=>,
+                                   main_rst_i=>,
                                    rf_enable_i=>,
                                    jn_sel_i=>,
                                    jb_sel_i=>,
@@ -58,6 +61,7 @@ risc_data_path: data_path port map(main_clk_i=>,
                                    output_sel_i=>,
                                    instruction_mem_state=>,
                                    rf_state=>,
+                                   su_sel_i=>,
                                    alu_state=>,
                                    mult_state=>,
                                    div_state=>,
