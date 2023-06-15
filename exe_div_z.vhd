@@ -56,8 +56,6 @@ begin
 
             quotient_reg(DATA_WIDTH/2) := '0';
 
-            
-
         quotient <= quotient_reg;
         remainder(DATA_WIDTH/2 - 2 downto 0) <= restore_reg(DATA_WIDTH - 1 downto DATA_WIDTH/2 + 1);
         remainder(DATA_WIDTH-1 downto DATA_WIDTH/2 - 2) <= (others => '0');

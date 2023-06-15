@@ -22,6 +22,10 @@ entity data_path is
          memory_rw_control_i:      in std_logic;-- '0'=memory read '1'=memory write
          memory_enable_i:          in std_logic;
          output_sel_i:             in std_logic;-- '0'=memory , '1'=write back
+         if_stage_reg_en_i:        in std_logic;
+         id_stage_reg_en_i:        in std_logic;
+         exe_stage_reg_en_i:       in std_logic;
+         mem_stage_reg_en_i:       in std_logic;
          instruction_mem_state_o:  out std_logic;-- '0'=idle, '1'=occupied
          rf_state_o:               out std_logic;
          alu_state_o:              out std_logic;
@@ -32,6 +36,7 @@ entity data_path is
          func_code_o:              out std_logic_vector(dp_func_code_width-1 downto 0);
          opcode_o:                 out std_logic_vector(dp_opcode_width-1 downto 0);
          processor_ouput_o:        out std_logic_vector(dp_opcode_width-1 downto 0)
+
          );
 end entity;
 architecture str of data_path is
@@ -60,7 +65,7 @@ component id_stage is
             addr_width:             integer := 32;
             opcode_width:           integer := 6;
             rf_reg_addr_width:      integer := 5;
-            func_width:             integer := 6);
+            func_width:             integer := 11);
     port(id_instruction:            in std_logic_vector(data_width-1 downto 0);
          id_currinstruction_addr:   in std_logic_vector(addr_width-1 downto 0);
          id_clk_i:                  in std_logic;
@@ -154,10 +159,10 @@ begin
     if_id_reg1: n_bit_reg generic map(data_width=>dp_data_width)
                           port map(data_i=>curr_instruction,
                                    clk=>main_clk_i,
-                                   en=>'1',
+                                   en=>if_stage_reg_en_i,
                                    data_o=>curr_instruction_id);
 -- id stage 
-    risc_id: id_stage generic map(opcode_width=>dp_opcode_width, --����Ҫ���������imm��rf_opb��ѡ��
+    risc_id: id_stage generic map(opcode_width=>dp_opcode_width, 
                                   rf_reg_addr_width=>dp_rf_reg_addr_width,
                                   func_width=>dp_func_code_width)
                       port map(id_instruction=>curr_instruction_id,
@@ -183,19 +188,19 @@ begin
     id_exe_reg1: n_bit_reg generic map(data_width=>dp_data_width)
                           port map(data_i=>operand_a,
                                    clk=>main_clk_i,
-                                   en=>'1',
+                                   en=>id_stage_reg_en_i,
                                    data_o=>operand_a_exe);
                                    
     id_exe_reg2: n_bit_reg generic map(data_width=>dp_data_width)
                            port map(data_i=>operand_b,
                                     clk=>main_clk_i,
-                                    en=>'1',
+                                    en=>id_stage_reg_en_i,
                                     data_o=>operand_b_exe);
     
     id_exe_reg4: n_bit_reg generic map(data_width=>dp_rf_reg_addr_width)
                            port map(data_i=>rd,
                                     clk=>main_clk_i,
-                                    en=>'1',
+                                    en=>id_stage_reg_en_i,
                                     data_o=>rd_exe);
 -- exe stage
     risc_exe: exe_stage generic map (data_width=>dp_data_width,
@@ -214,19 +219,19 @@ begin
     exe_mem_reg1: n_bit_reg generic map(data_width=>dp_data_width)
                             port map(data_i=>exe_result,
                                     clk=>main_clk_i,
-                                    en=>'1',
+                                    en=>exe_stage_reg_en_i,
                                     data_o=>exe_result_mem);
     
     exe_mem_reg2: n_bit_reg generic map(data_width=>dp_data_width)
                             port map(data_i=>operand_b_exe,
                                     clk=>main_clk_i,
-                                    en=>'1',
+                                    en=>exe_stage_reg_en_i,
                                     data_o=>load_data_mem);
     
     exe_mem_reg3: n_bit_reg generic map(data_width=>dp_rf_reg_addr_width)
                             port map(data_i=>operand_b_exe,
                                     clk=>main_clk_i,
-                                    en=>'1',
+                                    en=>exe_stage_reg_en_i,
                                     data_o=>rd_mem);
 -- mem stage
 
@@ -244,7 +249,7 @@ begin
     mem_out_reg3: n_bit_reg generic map(data_width=>dp_rf_reg_addr_width)
                             port map(data_i=>data_write_back,
                                      clk=>main_clk_i,
-                                     en=>'1',
+                                     en=>mem_stage_reg_en_i,
                                      data_o=>processor_ouput_o);
 -------------------
 --  branch path  --
