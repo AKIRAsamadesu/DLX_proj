@@ -36,7 +36,7 @@ architecture str of if_stage is
                               dout=>if_instruction_o);
     	if_ins_mem_state <= '1';
 
- end str; 	
+ end str; 	---from ZhouCH
 
 
 
