@@ -118,7 +118,7 @@ end component;
 --  signal list  --
 -------------------
 -- to if 
-signal curr_instruction_addr:               std_logic_vector(dp_addr_width-1 downto 0);
+signal curr_instruction_addr:               std_logic_vector(dp_addr_width-1 downto 0):=(others=>'0');
 signal next_instruction_addr:               std_logic_vector(dp_addr_width-1 downto 0);
 signal normal_next_instruction_addr:        std_logic_vector(dp_addr_width-1 downto 0);
 

@@ -9,16 +9,13 @@ use ieee.std_logic_textio.all;
 -- Memory filled by a process which reads from a file
 -- file name is "test.asm.mem"
 entity iram is
-  generic (
-    RAM_DEPTH : integer := 48; -- the number of instructurns
-    I_SIZE : integer := 32;
-    ADDR_SIZE : integer := 6);
-  port (
-    Clk  : in std_logic;
-    Rst  : in  std_logic;
-    Addr : in  std_logic_vector(ADDR_SIZE - 1 downto 0);
-    Dout : out std_logic_vector(I_SIZE - 1 downto 0)
-    );
+  generic (RAM_DEPTH : integer := 48; -- the number of instructurns
+           I_SIZE : integer := 32;
+           ADDR_SIZE : integer := 6);
+  port (Clk  : in std_logic;
+        Rst  : in  std_logic;
+        Addr : in  std_logic_vector(ADDR_SIZE - 1 downto 0);
+        Dout : out std_logic_vector(I_SIZE - 1 downto 0));
 
 end iram;
 
