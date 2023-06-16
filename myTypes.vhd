@@ -80,20 +80,20 @@ package myTypes is
     constant RTYPE_MULT : std_logic_vector(FUNC_SIZE - 1 downto 0) :=  "00000001110";--0x0e     
 
   constant MICROCODE_MEM_SIZE  :    integer := 11;
-  constant CW_SIZE             :     integer := 10;
+  constant CW_SIZE             :     integer := 12;
   type mem_array is array (integer range 0 to MICROCODE_MEM_SIZE - 1) of std_logic_vector(CW_SIZE - 1 downto 0);
   signal cw_mem : mem_array := ( 
-                                 "0000000000", --R_TYPE_NOP             0
-                                 "1100000011", --R_type                 1
-                                 "1101000011", --I_type                 2
-                                 "1101001001", --I_type_LW              3
-                                 "1101001100", --I_type_SW              4
-                                 "1110000000", --J                      5
-                                 "1110000010", --JAL                    6
-                                 "1110100000", --BEQZ                   7
-                                 "1110110000", --BNEQ                   8
-                                 "1110000000", --JR                     9
-                                 "1110000011" --JALR                   10
+                                 "000000000000", --R_TYPE_NOP             0
+                                 "111100000011", --R_type                 1
+                                 "111101000011", --I_type                 2
+                                 "111101000101", --I_type_LW              3
+                                 "111101001100", --I_type_SW              4
+                                 "010010000000", --J                      5
+                                 "010010000011", --JAL                    6
+                                 "011010010000", --BEQZ                   7
+                                 "011010110000", --BNEZ                   8
+                                 "011010000000", --JR                     9
+                                 "011010000011" --JALR                   10
   );
 
 
