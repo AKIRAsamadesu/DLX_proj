@@ -4,16 +4,21 @@ use ieee.numeric_std.all;
 
 entity ALU is
   generic (
-    DATA_WIDTH: positive := 8
+    DATA_WIDTH: positive := 8;
+    func_code_width: positive := 11
   );
   port (
     A: in std_logic_vector(DATA_WIDTH - 1 downto 0);
     B: in std_logic_vector(DATA_WIDTH - 1 downto 0);
-    Op: in std_logic_vector(4 downto 0);
+    Op: in std_logic_vector(10 downto 0);               ----
     Result: out std_logic_vector(DATA_WIDTH - 1 downto 0);
+    exe_add_state_o: out std_logic;
+    exe_mult_state_o: out std_logic;
+    exe_div_state_o: out std_logic;
     O: out std_logic
   );
-end entity ALU;
+end entity ALU;               ----
+
 
 architecture Behavioral of ALU is
   
@@ -109,9 +114,16 @@ begin
   variable shift_amount_l: integer range 0 to DATA_WIDTH - 1;
   variable Temp_lsr: std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
   variable shift_amount_r: integer range 0 to DATA_WIDTH - 1;
+  variable Temp_sra: std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
+  variable shift_arith_r: integer range 0 to DATA_WIDTH - 1;
   variable result_comp: std_logic_vector(DATA_WIDTH - 1 downto 0);
 
+
   begin
+    exe_add_state_o <= '0';
+    exe_mult_state_o <= '0';
+    exe_div_state_o <= '0';
+
     for i in 0 to DATA_WIDTH - 1 loop       --or
       Temp_or(i) := A(i) or B(i);     
     end loop;
@@ -142,28 +154,41 @@ begin
       end if;
     end loop;                                --slr
 
+    shift_arith_r := to_integer(unsigned(B));
+    for i in 0 to DATA_WIDTH - 1 loop
+      if i + shift_arith_r >= DATA_WIDTH then
+        Temp_sra(i) := A(DATA_WIDTH -1);
+      else
+        Temp_sra(i) := A(i + shift_amount_r);
+      end if;
+    end loop;                                --sra
+
 
 
     case Op is                  --change "xx" to cooperate the operation
-      when "00000" => Result <= std_logic_vector(Temp_or);
-      O <= '0';                                              -- Logic OR
-      when "00001" => Result <= std_logic_vector(Temp_and);  
-      O <= '0';                                              -- Logic and
-      when "00010" => Result <= std_logic_vector(Temp_xor); 
-      O <= '0';                                              -- Logic xor
-      when "00011" => Result <= std_logic_vector(Temp_lsl);  
-      O <= '0';                                              -- Logic Left Shift
-      when "00100" => Result <= std_logic_vector(Temp_lsr);  
-      O <= '0';                                              -- Logic Right Shift
-      when "00101" =>                                        -- Perform add
+      when "00000100101" => Result <= std_logic_vector(Temp_or);
+      O <= '0';                                              -- Logic OR  1
+      when "00000100100" => Result <= std_logic_vector(Temp_and);  
+      O <= '0';                                              -- Logic and  2
+      when "00000100110" => Result <= std_logic_vector(Temp_xor); 
+      O <= '0';                                              -- Logic xor  3
+      when "00000000100" => Result <= std_logic_vector(Temp_lsl);  
+      O <= '0';                                              -- Logic Left Shift  4
+      when "00000000110" => Result <= std_logic_vector(Temp_lsr);  
+      O <= '0';                                              -- Logic Right Shift  5
+      when "00000000111" => Result <= std_logic_vector(Temp_sra);  
+      O <= '0';                                              -- Arith Right Shift  5
+      when "00000100000" =>                                        -- Perform add  6
           SUBTRACT_signal <= '0';
           Result <= AdderResult;
-          O <= O_Result;       --overflow                         
-      when "00110" =>                                        -- Perform sub
+          O <= O_Result;       --overflow   
+          exe_add_state_o <= '1';                      
+      when "00000100010" =>                                        -- Perform sub  7
           SUBTRACT_signal <= '1';
           Result <= AdderResult;
-          O <= O_Result;                                                        
-      when "00111" =>                                        -- Perform sne
+          O <= O_Result; 
+          exe_add_state_o <= '1';                                                       
+      when "00000101001" =>                                        -- Perform sne  8
           SUBTRACT_signal <= '1';
           result_comp := AdderResult;
           if to_integer(unsigned(result_comp)) = 0 then
@@ -173,7 +198,8 @@ begin
             Result(0) <= '1';
             end if; 
           O <= '0';
-      when "01000" =>                                        -- Perform sle
+          exe_add_state_o <= '1';
+      when "00000101100" =>                                        -- Perform sle  9
           SUBTRACT_signal <= '1';
           result_comp := AdderResult;
           if to_integer(signed(result_comp)) > 0 then
@@ -183,7 +209,19 @@ begin
             Result(0) <= '1';
             end if; 
           O <= '0';
-      when "01001" =>                                        -- Perform sge
+          exe_add_state_o <= '1';
+      when "00000101010" =>                                        -- Perform slt  10
+          SUBTRACT_signal <= '1';
+          result_comp := AdderResult;
+          if to_integer(signed(result_comp)) < 0 then
+            Result <= (others => '0');
+            Result(0) <= '1';
+          else
+            Result <= (others => '0');
+            end if; 
+          O <= '0';
+          exe_add_state_o <= '1';
+      when "00000101101" =>                                        -- Perform sge  11 
           SUBTRACT_signal <= '1';
           result_comp := AdderResult;
           if to_integer(signed(result_comp)) < 0 then
@@ -193,15 +231,28 @@ begin
             Result(0) <= '1';
             end if; 
           O <= '0';
-      when "01010" =>                                        -- Perform addu
+      when "00000101011" =>                                        -- Perform sgt  12
+          SUBTRACT_signal <= '1';
+          result_comp := AdderResult;
+          if to_integer(signed(result_comp)) > 0 then
+            Result <= (others => '0');
+            Result(0) <= '1';
+          else
+            Result <= (others => '0');
+            end if; 
+          O <= '0';
+          exe_add_state_o <= '1';
+      when "00000100001" =>                                        -- Perform addu  13
           SUBTRACT_signal <= '0';
           Result <= AdderResult; 
-          O <= '0';                           
-      when "01011" =>                                        -- Perform subu
+          O <= '0';
+          exe_add_state_o <= '1';                           
+      when "00000100011" =>                                        -- Perform subu  14
           SUBTRACT_signal <= '1';
           Result <= AdderResult;
           O <= '0';
-      when "01100" =>                                        -- Perform seq
+          exe_add_state_o <= '1';
+      when "00000101000" =>                                        -- Perform seq  15
           SUBTRACT_signal <= '1';
           result_comp := AdderResult;
           if to_integer(signed(result_comp)) = 0 then
@@ -211,12 +262,15 @@ begin
             Result <= (others => '0');
             end if;  
           O <= '0';
-      when "01101" =>                                        -- Perform mul
+          exe_add_state_o <= '1';
+      when "00000001110" =>                                        -- Perform mul  16
           Result(DATA_WIDTH - 1 downto 0) <= MulResult(DATA_WIDTH - 1 downto 0);
-          O <= '0';    
-      when "01110" =>                                        -- Perform div
+          O <= '0'; 
+          exe_mult_state_o <= '1';   
+      when "10000001110" =>                                        -- Perform div  17 -- bad funccode-
           Result(DATA_WIDTH - 1 downto 0) <= DivResult(DATA_WIDTH - 1 downto 0);
-          O <= '0';                          
+          O <= '0';   
+          exe_div_state_o <= '1';                       
 
       -- Add other cases for different operations
       when others => Result <= (others => '0');
